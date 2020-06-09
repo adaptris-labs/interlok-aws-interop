@@ -28,7 +28,7 @@ docker-compose logs -f localstackhttps
 curl -X POST http://localhost:8080/api/kinesis -d '{ "key" : "value" }'
 ```
 
-## TOOD
+## TODO
 
 * Add S3 tests
 * Add SQS tests
