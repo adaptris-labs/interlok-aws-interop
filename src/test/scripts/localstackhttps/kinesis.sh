@@ -1,7 +1,15 @@
 #!/bin/bash
 set -eu
 
-apk add jq
+if ! [ -x "$(command -v jq)" ]; then
+  if [ -x "$(command -v apk)" ]; then
+    apk add jq
+  else
+    "JQ not avaiable"
+    exit 1
+  fi
+fi
+
 
 export PYTHONWARNINGS=ignore
 
