@@ -1,0 +1,17 @@
+ext {
+  interlokParentGradle = project.findProperty('interlokParentGradle') ?: 'https://raw.githubusercontent.com/adaptris-labs/interlok-build-parent/master/build.gradle'
+  interlokVersion  = '3.10-SNAPSHOT'
+}
+
+repositories {
+  mavenLocal()
+}
+
+allprojects {
+  apply from: "${interlokParentGradle}"
+}
+
+dependencies {
+  interlokRuntime  group: "com.adaptris", name: "interlok-aws-kinesis", version: interlokVersion, changing: true
+  interlokJavadocs group: "com.adaptris", name: "interlok-aws-kinesis", version: interlokVersion, changing: true, classifier: "javadoc", transitive: false
+}

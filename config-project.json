@@ -1,0 +1,15 @@
+{
+  "name" : "interlok-aws-kinesis-interop",
+  "variableSets" : {
+    "default" : { }
+  },
+  "variableXpaths" : { },
+  "uidInXincludeCompntListFileName" : false,
+  "xincludeXpaths" : { },
+  "additionalFiles" : {
+    "bootstrap.properties" : "bootstrap.properties",
+    "log4j2.xml" : "log4j2.xml"
+  },
+  "optionalComponentsInUse" : [ "com.adaptris:interlok-aws-common:3.10-SNAPSHOT", "com.adaptris:interlok-aws-kinesis:3.10-SNAPSHOT" ],
+  "structured" : true
+}

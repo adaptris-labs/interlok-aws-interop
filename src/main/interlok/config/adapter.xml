@@ -1,0 +1,91 @@
+<adapter>
+  <unique-id>interlok-aws-kinesis-interop</unique-id>
+  <start-up-event-imp>com.adaptris.core.event.StandardAdapterStartUpEvent</start-up-event-imp>
+  <heartbeat-event-imp>com.adaptris.core.HeartbeatEvent</heartbeat-event-imp>
+  <shared-components>
+    <connections>
+      <aws-kinesis-kpl-inline-connection>
+        <unique-id>kinesis</unique-id>
+        <config>
+          <key-value-pair>
+            <key>KinesisEndpoint</key>
+            <value>localhost</value>
+          </key-value-pair>
+          <key-value-pair>
+            <key>KinesisPort</key>
+            <value>4568</value>
+          </key-value-pair>
+          <key-value-pair>
+            <key>Region</key>
+            <value>us-west-1</value>
+          </key-value-pair>
+          <key-value-pair>
+            <key>VerifyCertificate</key>
+            <value>false</value>
+          </key-value-pair>
+          <key-value-pair>
+            <key>MetricsLevel</key>
+            <value>none</value>
+          </key-value-pair>
+        </config>
+        <credentials class="aws-static-credentials-builder">
+          <authentication class="aws-default-authentication"/>
+        </credentials>
+      </aws-kinesis-kpl-inline-connection>
+    </connections>
+    <services/>
+  </shared-components>
+  <event-handler class="default-event-handler">
+    <unique-id>DefaultEventHandler</unique-id>
+    <connection class="null-connection">
+      <unique-id>cranky-nightingale</unique-id>
+    </connection>
+    <producer class="null-message-producer">
+      <unique-id>hopeful-shannon</unique-id>
+    </producer>
+  </event-handler>
+  <message-error-handler class="null-processing-exception-handler">
+    <unique-id>cocky-mccarthy</unique-id>
+  </message-error-handler>
+  <failed-message-retrier class="no-retries">
+    <unique-id>nauseous-shannon</unique-id>
+  </failed-message-retrier>
+  <channel-list>
+    <channel>
+      <consume-connection class="jetty-embedded-connection">
+        <unique-id>cranky-almeida</unique-id>
+      </consume-connection>
+      <produce-connection class="shared-connection">
+        <lookup-name>kinesis</lookup-name>
+      </produce-connection>
+      <workflow-list>
+        <standard-workflow>
+          <consumer class="jetty-message-consumer">
+            <unique-id>/api/kinesis</unique-id>
+            <destination class="configured-consume-destination">
+              <destination>/api/kinesis</destination>
+            </destination>
+            <parameter-handler class="jetty-http-ignore-parameters"/>
+            <header-handler class="jetty-http-ignore-headers"/>
+          </consumer>
+          <service-collection class="service-list">
+            <unique-id>agitated-shaw</unique-id>
+            <services/>
+          </service-collection>
+          <producer class="aws-kinesis-stream-producer">
+            <unique-id>kinesis-producer</unique-id>
+            <stream>myStream</stream>
+            <partition-key>myPartition</partition-key>
+          </producer>
+          <produce-exception-handler class="null-produce-exception-handler"/>
+          <unique-id>/api/kinesis</unique-id>
+        </standard-workflow>
+      </workflow-list>
+      <unique-id>kinesis</unique-id>
+    </channel>
+  </channel-list>
+  <message-error-digester class="standard-message-error-digester">
+    <unique-id>ErrorDigest</unique-id>
+    <digest-max-size>100</digest-max-size>
+  </message-error-digester>
+</adapter>
