@@ -1,5 +1,5 @@
 <adapter>
-  <unique-id>interlok-aws-kinesis-interop</unique-id>
+  <unique-id>interlok-aws-interop</unique-id>
   <start-up-event-imp>com.adaptris.core.event.StandardAdapterStartUpEvent</start-up-event-imp>
   <heartbeat-event-imp>com.adaptris.core.HeartbeatEvent</heartbeat-event-imp>
   <shared-components>
@@ -32,28 +32,55 @@
           <authentication class="aws-default-authentication"/>
         </credentials>
       </aws-kinesis-kpl-inline-connection>
+      <amazon-s3-connection>
+        <unique-id>s3</unique-id>
+        <region>eu-west-1</region>
+        <credentials class="aws-static-credentials-builder">
+          <authentication class="aws-default-authentication"/>
+        </credentials>
+        <custom-endpoint>
+          <service-endpoint>http://localhost:4572</service-endpoint>
+          <signing-region>eu-west-1</signing-region>
+        </custom-endpoint>
+        <force-path-style-access>true</force-path-style-access>
+      </amazon-s3-connection>
     </connections>
     <services/>
   </shared-components>
   <event-handler class="default-event-handler">
-    <unique-id>DefaultEventHandler</unique-id>
+    <unique-id>default-event-handler</unique-id>
     <connection class="null-connection">
-      <unique-id>cranky-nightingale</unique-id>
+      <unique-id>null-connection</unique-id>
     </connection>
     <producer class="null-message-producer">
-      <unique-id>hopeful-shannon</unique-id>
+      <unique-id>null-message-producer</unique-id>
     </producer>
   </event-handler>
-  <message-error-handler class="null-processing-exception-handler">
-    <unique-id>cocky-mccarthy</unique-id>
+  <message-error-handler class="standard-processing-exception-handler">
+    <unique-id>error-handler</unique-id>
+    <processing-exception-service class="service-list">
+      <unique-id>error-handler</unique-id>
+      <services>
+        <exception-report-service>
+          <unique-id>error-report</unique-id>
+          <exception-serializer class="exception-as-json"/>
+        </exception-report-service>
+        <jetty-response-service>
+          <unique-id>jetty-response</unique-id>
+          <http-status>500</http-status>
+          <content-type>application/json</content-type>
+          <response-header-provider class="jetty-no-response-headers"/>
+        </jetty-response-service>
+      </services>
+    </processing-exception-service>
   </message-error-handler>
   <failed-message-retrier class="no-retries">
-    <unique-id>nauseous-shannon</unique-id>
+    <unique-id>no-retries</unique-id>
   </failed-message-retrier>
   <channel-list>
     <channel>
       <consume-connection class="jetty-embedded-connection">
-        <unique-id>cranky-almeida</unique-id>
+        <unique-id>jetty-embedded-connection</unique-id>
       </consume-connection>
       <produce-connection class="shared-connection">
         <lookup-name>kinesis</lookup-name>
@@ -83,9 +110,371 @@
       </workflow-list>
       <unique-id>kinesis</unique-id>
     </channel>
+    <channel>
+      <consume-connection class="jetty-embedded-connection">
+        <unique-id>jetty-embedded-connection</unique-id>
+      </consume-connection>
+      <produce-connection class="null-connection">
+        <unique-id>null-connection</unique-id>
+      </produce-connection>
+      <workflow-list>
+        <pooling-workflow>
+          <consumer class="jetty-message-consumer">
+            <unique-id>/api/s3</unique-id>
+            <destination class="configured-consume-destination">
+              <destination>/api/s3/*</destination>
+            </destination>
+            <parameter-handler class="jetty-http-parameters-as-metadata"/>
+            <header-handler class="jetty-http-headers-as-metadata"/>
+          </consumer>
+          <service-collection class="service-list">
+            <unique-id>service-list</unique-id>
+            <services>
+              <add-metadata-service>
+                <unique-id>add-bucket</unique-id>
+                <metadata-element>
+                  <key>bucket</key>
+                  <value>bucket</value>
+                </metadata-element>
+              </add-metadata-service>
+              <switch>
+                <unique-id>http-routing</unique-id>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>/api/s3/?$</url-pattern>
+                    <method>GET</method>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>s3-list</unique-id>
+                    <services>
+                      <amazon-s3-service>
+                        <unique-id>list-from-s3</unique-id>
+                        <connection class="shared-connection">
+                          <lookup-name>s3</lookup-name>
+                        </connection>
+                        <operation class="amazon-s3-list">
+                          <bucket>%message{bucket}</bucket>
+                          <output-style class="remote-blob-list-as-json"/>
+                        </operation>
+                      </amazon-s3-service>
+                    </services>
+                  </service>
+                </case>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>/api/s3/(.*)$</url-pattern>
+                    <method>GET</method>
+                    <metadata-key>key</metadata-key>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>s3-get</unique-id>
+                    <services>
+                      <if-then-otherwise>
+                        <unique-id>check-use-download</unique-id>
+                        <condition class="metadata">
+                          <operator class="equals">
+                            <value>true</value>
+                          </operator>
+                          <metadata-key>useDownload</metadata-key>
+                        </condition>
+                        <then>
+                          <service class="service-list">
+                            <unique-id>then</unique-id>
+                            <services>
+                              <amazon-s3-service>
+                                <unique-id>download-from-s3</unique-id>
+                                <connection class="shared-connection">
+                                  <lookup-name>s3</lookup-name>
+                                </connection>
+                                <operation class="amazon-s3-download">
+                                  <bucket>%message{bucket}</bucket>
+                                  <object-name>%message{key}</object-name>
+                                </operation>
+                              </amazon-s3-service>
+                            </services>
+                          </service>
+                        </then>
+                        <otherwise>
+                          <service class="service-list">
+                            <unique-id>otherwise</unique-id>
+                            <services>
+                              <amazon-s3-service>
+                                <unique-id>get-from-s3</unique-id>
+                                <connection class="shared-connection">
+                                  <lookup-name>s3</lookup-name>
+                                </connection>
+                                <operation class="amazon-s3-get">
+                                  <bucket>%message{bucket}</bucket>
+                                  <object-name>%message{key}</object-name>
+                                  <response-body class="stream-payload-output-parameter"/>
+                                </operation>
+                              </amazon-s3-service>
+                            </services>
+                          </service>
+                        </otherwise>
+                      </if-then-otherwise>
+                    </services>
+                  </service>
+                </case>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>/api/s3/(.*)$</url-pattern>
+                    <method>POST</method>
+                    <metadata-key>key</metadata-key>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>s3-upload</unique-id>
+                    <services>
+                      <add-metadata-service>
+                        <unique-id>add-default-content-type</unique-id>
+                        <metadata-element>
+                          <key>Content-Type</key>
+                          <value>application/json</value>
+                        </metadata-element>
+                        <overwrite>false</overwrite>
+                      </add-metadata-service>
+                      <amazon-s3-service>
+                        <unique-id>upload-to-s3</unique-id>
+                        <connection class="shared-connection">
+                          <lookup-name>s3</lookup-name>
+                        </connection>
+                        <operation class="amazon-s3-upload">
+                          <bucket>%message{bucket}</bucket>
+                          <object-name>%message{key}</object-name>
+                          <object-metadata>
+                            <s3-content-type>
+                              <content-type>%message{Content-Type}</content-type>
+                            </s3-content-type>
+                          </object-metadata>
+                        </operation>
+                      </amazon-s3-service>
+                    </services>
+                  </service>
+                </case>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>/api/s3/(.*)$</url-pattern>
+                    <method>DELETE</method>
+                    <metadata-key>key</metadata-key>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>s3-delete</unique-id>
+                    <services>
+                      <amazon-s3-service>
+                        <unique-id>delete-from-s3</unique-id>
+                        <connection class="shared-connection">
+                          <lookup-name>s3</lookup-name>
+                        </connection>
+                        <operation class="amazon-s3-delete">
+                          <bucket>%message{bucket}</bucket>
+                          <object-name>%message{key}</object-name>
+                        </operation>
+                      </amazon-s3-service>
+                    </services>
+                  </service>
+                </case>
+              </switch>
+            </services>
+          </service-collection>
+          <producer class="jetty-standard-response-producer">
+            <unique-id>jetty-response-producer</unique-id>
+            <status-provider class="http-configured-status">
+              <status>OK_200</status>
+            </status-provider>
+            <response-header-provider class="jetty-no-response-headers"/>
+            <content-type-provider class="http-configured-content-type-provider">
+              <mime-type>application/json</mime-type>
+            </content-type-provider>
+          </producer>
+          <produce-exception-handler class="null-produce-exception-handler"/>
+          <unique-id>/api/s3</unique-id>
+        </pooling-workflow>
+        <pooling-workflow>
+          <consumer class="jetty-message-consumer">
+            <unique-id>/api/s3utils</unique-id>
+            <destination class="configured-consume-destination">
+              <destination>/api/s3utils/*</destination>
+            </destination>
+            <parameter-handler class="jetty-http-parameters-as-metadata"/>
+            <header-handler class="jetty-http-headers-as-metadata"/>
+          </consumer>
+          <service-collection class="service-list">
+            <unique-id>awesome-fermi</unique-id>
+            <services>
+              <json-to-metadata>
+                <unique-id>json-to-metadata</unique-id>
+              </json-to-metadata>
+              <add-metadata-service>
+                <unique-id>add-bucket</unique-id>
+                <metadata-element>
+                  <key>bucket</key>
+                  <value>bucket</value>
+                </metadata-element>
+                <overwrite>false</overwrite>
+              </add-metadata-service>
+              <switch>
+                <unique-id>http-routing</unique-id>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>^/api/s3utils/check-file-exists$</url-pattern>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>check-file-exists</unique-id>
+                    <services>
+                      <amazon-s3-service>
+                        <unique-id>check-file-exists</unique-id>
+                        <connection class="shared-connection">
+                          <lookup-name>s3</lookup-name>
+                        </connection>
+                        <operation class="amazon-s3-check-file-exists">
+                          <bucket>%message{bucket}</bucket>
+                          <object-name>%message{key}</object-name>
+                        </operation>
+                      </amazon-s3-service>
+                    </services>
+                  </service>
+                </case>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>^/api/s3utils/copy$</url-pattern>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>copy</unique-id>
+                    <services>
+                      <amazon-s3-service>
+                        <unique-id>copy</unique-id>
+                        <connection class="shared-connection">
+                          <lookup-name>s3</lookup-name>
+                        </connection>
+                        <operation class="amazon-s3-copy">
+                          <bucket>%message{bucket}</bucket>
+                          <object-name>%message{from}</object-name>
+                          <destination-bucket>%message{bucket}</destination-bucket>
+                          <destination-object-name>%message{to}</destination-object-name>
+                        </operation>
+                      </amazon-s3-service>
+                    </services>
+                  </service>
+                </case>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>^/api/s3utils/copy-extended$</url-pattern>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>copy-extended</unique-id>
+                    <services>
+                      <amazon-s3-service>
+                        <unique-id>copy-extended</unique-id>
+                        <connection class="shared-connection">
+                          <lookup-name>s3</lookup-name>
+                        </connection>
+                        <operation class="amazon-s3-extended-copy">
+                          <bucket>%message{bucket}</bucket>
+                          <object-name>%message{from}</object-name>
+                          <destination-bucket>%message{bucket}</destination-bucket>
+                          <destination-object-name>%message{to}</destination-object-name>
+                          <object-metadata>
+                            <s3-content-disposition>
+                              <content-disposition>attachment; filename=&quot;%message{from}&quot;</content-disposition>
+                            </s3-content-disposition>
+                          </object-metadata>
+                        </operation>
+                      </amazon-s3-service>
+                    </services>
+                  </service>
+                </case>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>^/api/s3utils/tag$</url-pattern>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>tag</unique-id>
+                    <services>
+                      <amazon-s3-service>
+                        <unique-id>tag</unique-id>
+                        <connection class="shared-connection">
+                          <lookup-name>s3</lookup-name>
+                        </connection>
+                        <operation class="amazon-s3-tag">
+                          <bucket>%message{bucket}</bucket>
+                          <object-name>%message{key}</object-name>
+                          <tag-metadata-filter class="composite-metadata-filter">
+                            <regex-metadata-filter>
+                              <include-pattern>^tags_.*$</include-pattern>
+                            </regex-metadata-filter>
+                            <mapped-key-metadata-filter>
+                              <prefix>^tags_(.*)$</prefix>
+                              <replacement>$1</replacement>
+                            </mapped-key-metadata-filter>
+                          </tag-metadata-filter>
+                        </operation>
+                      </amazon-s3-service>
+                    </services>
+                  </service>
+                </case>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>^/api/s3utils/tag-get$</url-pattern>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>tag-get</unique-id>
+                    <services>
+                      <amazon-s3-service>
+                        <unique-id>tag-get</unique-id>
+                        <connection class="shared-connection">
+                          <lookup-name>s3</lookup-name>
+                        </connection>
+                        <operation class="amazon-s3-tag-get">
+                          <bucket>%message{bucket}</bucket>
+                          <object-name>%message{key}</object-name>
+                          <tag-metadata-filter class="composite-metadata-filter">
+                            <regex-metadata-filter>
+                              <include-pattern>^.*$</include-pattern>
+                            </regex-metadata-filter>
+                            <mapped-key-metadata-filter>
+                              <prefix>^(.*)$</prefix>
+                              <replacement>tags_$1</replacement>
+                            </mapped-key-metadata-filter>
+                          </tag-metadata-filter>
+                        </operation>
+                      </amazon-s3-service>
+                      <metadata-to-json-service>
+                        <unique-id>small-wiles</unique-id>
+                        <metadata-filter class="composite-metadata-filter">
+                          <regex-metadata-filter>
+                            <include-pattern>^tags_.*$</include-pattern>
+                          </regex-metadata-filter>
+                          <mapped-key-metadata-filter>
+                            <prefix>^tags_(.*)$</prefix>
+                            <replacement>$1</replacement>
+                          </mapped-key-metadata-filter>
+                        </metadata-filter>
+                      </metadata-to-json-service>
+                    </services>
+                  </service>
+                </case>
+              </switch>
+            </services>
+          </service-collection>
+          <producer class="jetty-standard-response-producer">
+            <unique-id>jetty-response-producer</unique-id>
+            <status-provider class="http-configured-status">
+              <status>OK_200</status>
+            </status-provider>
+            <response-header-provider class="jetty-no-response-headers"/>
+            <content-type-provider class="http-configured-content-type-provider">
+              <mime-type>application/json</mime-type>
+            </content-type-provider>
+          </producer>
+          <produce-exception-handler class="null-produce-exception-handler"/>
+          <unique-id>/api/s3utils</unique-id>
+        </pooling-workflow>
+      </workflow-list>
+      <unique-id>s3</unique-id>
+    </channel>
   </channel-list>
   <message-error-digester class="standard-message-error-digester">
-    <unique-id>ErrorDigest</unique-id>
+    <unique-id>error-digester</unique-id>
     <digest-max-size>100</digest-max-size>
   </message-error-digester>
 </adapter>

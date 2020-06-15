@@ -15,6 +15,10 @@ allprojects {
 }
 
 dependencies {
+  interlokRuntime  group: "com.adaptris", name: "interlok-json",        version: interlokVersion, changing: true
+  interlokJavadocs group: "com.adaptris", name: "interlok-json",        version: interlokVersion, changing: true, classifier: "javadoc", transitive: false
   interlokRuntime  group: "com.adaptris", name: "interlok-aws-kinesis", version: interlokVersion, changing: true
   interlokJavadocs group: "com.adaptris", name: "interlok-aws-kinesis", version: interlokVersion, changing: true, classifier: "javadoc", transitive: false
+  interlokRuntime  group: "com.adaptris", name: "interlok-aws-s3",      version: interlokVersion, changing: true
+  interlokJavadocs group: "com.adaptris", name: "interlok-aws-s3",      version: interlokVersion, changing: true, classifier: "javadoc", transitive: false
 }
