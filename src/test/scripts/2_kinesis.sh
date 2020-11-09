@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /usr/bin/env bash
 set -eu
 
 if ! [ -x "$(command -v jq)" ]; then
@@ -13,7 +13,7 @@ fi
 
 export PYTHONWARNINGS=ignore
 
-ENDPOINT_URL="${ENDPOINT_URL:-https://localhost:4568}"
+ENDPOINT_URL="${ENDPOINT_URL:-https://localhost:4566}"
 AWS_FLAGS="--region eu-west-1 --endpoint-url=$ENDPOINT_URL --no-verify-ssl"
 
 function newStream()

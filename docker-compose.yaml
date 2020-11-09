@@ -1,24 +1,13 @@
 version: '3.2'
 services:
-  localstackhttps:
+  localstack:
     image: localstack/localstack
     environment:
-      - SERVICES=kinesis
+      - SERVICES=kinesis,s3,sqs,sns
       - USE_SSL=1
       - AWS_ACCESS_KEY_ID=abc
       - AWS_SECRET_ACCESS_KEY=def
     ports:
-      - "4568:4568"
+      - "4566:4566"
     volumes:
-      - ./src/test/scripts/localstackhttps:/docker-entrypoint-initaws.d
-
-  localstackhttp:
-    image: localstack/localstack
-    environment:
-      - SERVICES=s3,sqs,sns
-    ports:
-      - "4575:4575"
-      - "4576:4576"
-      - "4572:4572"
-    volumes:
-      - ./src/test/scripts/localstackhttp:/docker-entrypoint-initaws.d
+      - ./src/test/scripts:/docker-entrypoint-initaws.d

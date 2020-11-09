@@ -1,6 +1,6 @@
 ext {
   interlokParentGradle = project.findProperty('interlokParentGradle') ?: 'https://raw.githubusercontent.com/adaptris-labs/interlok-build-parent/master/build.gradle'
-  interlokVersion  = '3.10-SNAPSHOT'
+  interlokVersion  = '3.11-SNAPSHOT'
   interlokMavenLocal = project.findProperty('interlokMavenLocal') ?: false
 }
 
