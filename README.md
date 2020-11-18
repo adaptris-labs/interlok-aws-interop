@@ -26,7 +26,7 @@ java -jar ./lib/interlok-boot.jar
 
 ```shell
 # Follow kinesis stream iterator logs
-docker-compose logs -f localstackhttps
+docker-compose logs -f localstack
 curl -X POST http://localhost:8080/api/kinesis -d '{ "key" : "value" }'
 ```
 
@@ -61,6 +61,7 @@ curl "http://localhost:8080/api/s3utils/check-file-exists?key=nothere.txt"
 curl -si -XPOST -d"Hello World" http://localhost:8080/api/always-fail
 curl -si -XGET http://localhost:8080/api/failed/list
 curl -si -XPOST http://localhost:8080/api/retry/ec24c442-e688-45cc-b6db-24bd6893cf4e
+curl -si -XDELETE http://localhost:8080/api/failed/delete/ec24c442-e688-45cc-b6db-24bd6893cf4e
 ```
 
 ## TODO
