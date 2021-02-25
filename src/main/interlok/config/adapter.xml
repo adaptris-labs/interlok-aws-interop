@@ -13,7 +13,7 @@
           </key-value-pair>
           <key-value-pair>
             <key>KinesisPort</key>
-            <value>4568</value>
+            <value>4566</value>
           </key-value-pair>
           <key-value-pair>
             <key>Region</key>
@@ -39,7 +39,7 @@
           <authentication class="aws-default-authentication"/>
         </credentials>
         <custom-endpoint>
-          <service-endpoint>http://localhost:4572</service-endpoint>
+          <service-endpoint>http://localhost:4566</service-endpoint>
           <signing-region>eu-west-1</signing-region>
         </custom-endpoint>
         <force-path-style-access>true</force-path-style-access>
@@ -71,11 +71,35 @@
           <content-type>application/json</content-type>
           <response-header-provider class="jetty-no-response-headers"/>
         </jetty-response-service>
+        <retry-store-write-message>
+          <unique-id>retry-store-write-service</unique-id>
+          <retry-store class="amazon-s3-retry-store">
+            <connection class="shared-connection">
+              <lookup-name>s3</lookup-name>
+            </connection>
+            <bucket>bucket</bucket>
+            <prefix>errors</prefix>
+          </retry-store>
+        </retry-store-write-message>
       </services>
     </processing-exception-service>
   </message-error-handler>
-  <failed-message-retrier class="no-retries">
-    <unique-id>no-retries</unique-id>
+  <failed-message-retrier class="retry-via-jetty">
+    <unique-id>retry-from-jetty</unique-id>
+    <connection class="jetty-embedded-connection">
+      <unique-id>grave-bose</unique-id>
+    </connection>
+    <report-builder>
+      <report-renderer class="remote-blob-list-as-json"/>
+      <content-type>application/json</content-type>
+    </report-builder>
+    <retry-store class="amazon-s3-retry-store">
+      <connection class="shared-connection">
+        <lookup-name>s3</lookup-name>
+      </connection>
+      <bucket>bucket</bucket>
+      <prefix>errors</prefix>
+    </retry-store>
   </failed-message-retrier>
   <channel-list>
     <channel>
@@ -471,6 +495,39 @@
         </pooling-workflow>
       </workflow-list>
       <unique-id>s3</unique-id>
+    </channel>
+    <channel>
+      <consume-connection class="jetty-embedded-connection">
+        <unique-id>jetty-connection</unique-id>
+      </consume-connection>
+      <produce-connection class="null-connection">
+        <unique-id>null-connection</unique-id>
+      </produce-connection>
+      <workflow-list>
+        <standard-workflow>
+          <consumer class="jetty-message-consumer">
+            <unique-id>/api/always-fail</unique-id>
+            <path>/api/always-fail</path>
+          </consumer>
+          <service-collection class="service-list">
+            <unique-id>pedantic-montalcini</unique-id>
+            <services>
+              <throw-exception-service>
+                <unique-id>always-fail</unique-id>
+                <exception-generator class="configured-exception">
+                  <message>Always Fails.</message>
+                </exception-generator>
+              </throw-exception-service>
+            </services>
+          </service-collection>
+          <producer class="null-message-producer">
+            <unique-id>null-message-producer</unique-id>
+          </producer>
+          <produce-exception-handler class="null-produce-exception-handler"/>
+          <unique-id>always-fail</unique-id>
+        </standard-workflow>
+      </workflow-list>
+      <unique-id>utils</unique-id>
     </channel>
   </channel-list>
   <message-error-digester class="standard-message-error-digester">

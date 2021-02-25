@@ -26,7 +26,7 @@ java -jar ./lib/interlok-boot.jar
 
 ```shell
 # Follow kinesis stream iterator logs
-docker-compose logs -f localstackhttps
+docker-compose logs -f localstack
 curl -X POST http://localhost:8080/api/kinesis -d '{ "key" : "value" }'
 ```
 
@@ -34,25 +34,34 @@ curl -X POST http://localhost:8080/api/kinesis -d '{ "key" : "value" }'
 
 ```shell
 # Upload File
-curl -X POST -H "Content-Type: application/json" -d '{"key": "value"}' "http://localhost:8085/api/s3/file.txt"
+curl -X POST -H "Content-Type: application/json" -d '{"key": "value"}' "http://localhost:8080/api/s3/file.txt"
 # List Files
-curl "http://localhost:8085/api/s3/"
+curl "http://localhost:8080/api/s3/"
 # Get File
-curl "http://localhost:8085/api/s3/file.txt"
+curl "http://localhost:8080/api/s3/file.txt"
 # Get File (use download)
-curl "http://localhost:8085/api/s3/file.txt?useDownload=true"
+curl "http://localhost:8080/api/s3/file.txt?useDownload=true"
 # Delete File
-curl -X DELETE "http://localhost:8085/api/s3/file.txt"
+curl -X DELETE "http://localhost:8080/api/s3/file.txt"
 # Copy File
-curl "http://localhost:8085/api/s3utils/copy?from=file.txt&to=other.txt"
+curl "http://localhost:8080/api/s3utils/copy?from=file.txt&to=other.txt"
 # Extended Copy File (adds Content-Disposition)
-curl "http://localhost:8085/api/s3utils/copy-extended?from=file.txt&to=other.txt"
+curl "http://localhost:8080/api/s3utils/copy-extended?from=file.txt&to=other.txt"
 # Tag a file
-curl "http://localhost:8085/api/s3utils/tag?key=file.txt&tags_hello=world"
+curl "http://localhost:8080/api/s3utils/tag?key=file.txt&tags_hello=world"
 # Get Tags
-curl "http://localhost:8085/api/s3utils/tag-get?key=file.txt"
+curl "http://localhost:8080/api/s3utils/tag-get?key=file.txt"
 # Check File Exists
-curl "http://localhost:8085/api/s3utils/check-file-exists?key=nothere.txt"
+curl "http://localhost:8080/api/s3utils/check-file-exists?key=nothere.txt"
+```
+
+### S3 - Retry Message Store
+
+```shell
+curl -si -XPOST -d"Hello World" http://localhost:8080/api/always-fail
+curl -si -XGET http://localhost:8080/api/failed/list
+curl -si -XPOST http://localhost:8080/api/retry/ec24c442-e688-45cc-b6db-24bd6893cf4e
+curl -si -XDELETE http://localhost:8080/api/failed/delete/ec24c442-e688-45cc-b6db-24bd6893cf4e
 ```
 
 ## TODO

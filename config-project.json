@@ -10,6 +10,6 @@
     "bootstrap.properties" : "bootstrap.properties",
     "log4j2.xml" : "log4j2.xml"
   },
-  "optionalComponentsInUse" : [ "com.adaptris:interlok-aws-s3:3.10-SNAPSHOT", "com.adaptris:interlok-aws-common:3.10-SNAPSHOT", "com.adaptris:interlok-aws-kinesis:3.10-SNAPSHOT", "com.adaptris:interlok-json:3.10-SNAPSHOT" ],
+  "optionalComponentsInUse" : [ "com.adaptris:interlok-aws-common:3.11-SNAPSHOT", "com.adaptris:interlok-aws-kinesis:3.11-SNAPSHOT", "com.adaptris:interlok-aws-s3:3.11-SNAPSHOT", "com.adaptris:interlok-json:3.11-SNAPSHOT" ],
   "structured" : true
 }
