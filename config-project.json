@@ -3,13 +3,37 @@
   "variableSets" : {
     "default" : { }
   },
-  "variableXpaths" : { },
+  "variableXpaths" : {
+    "/adapter/shared-components/connections/aws-kinesis-kpl-inline-connection[unique-id=\"kinesis\"]/config/key-value-pair[1]/value" : "${host}",
+    "/adapter/shared-components/connections/aws-kinesis-kpl-inline-connection[unique-id=\"kinesis\"]/config/key-value-pair[2]/value" : "${port}",
+    "/adapter/shared-components/connections/aws-kinesis-kpl-inline-connection[unique-id=\"kinesis\"]/config/key-value-pair[3]/value" : "${region}",
+    "/adapter/shared-components/connections/amazon-s3-connection[unique-id=\"s3\"]/region" : "${region}",
+    "/adapter/shared-components/connections/amazon-s3-connection[unique-id=\"s3\"]/custom-endpoint/signing-region" : "${region}",
+    "/adapter/shared-components/connections/amazon-s3-connection[unique-id=\"s3\"]/custom-endpoint/service-endpoint" : "http://${host}:${port}",
+    "/adapter/shared-components/connections/amazon-sns-connection[unique-id=\"sns\"]/region" : "${region}",
+    "/adapter/shared-components/connections/amazon-sns-connection[unique-id=\"sns\"]/custom-endpoint/signing-region" : "${region}",
+    "/adapter/shared-components/connections/amazon-sns-connection[unique-id=\"sns\"]/custom-endpoint/service-endpoint" : "http://${host}:${port}",
+    "/adapter/shared-components/connections/amazon-sqs-connection[unique-id=\"sqs\"]/region" : "${region}",
+    "/adapter/shared-components/connections/amazon-sqs-connection[unique-id=\"sqs\"]/custom-endpoint/signing-region" : "${region}",
+    "/adapter/shared-components/connections/amazon-sqs-connection[unique-id=\"sqs\"]/custom-endpoint/service-endpoint" : "http://${host}:${port}",
+    "/adapter/channel-list/channel[unique-id=\"always-fail\"]/workflow-list/standard-workflow[unique-id=\"always-fail\"]/consumer/path" : "${apiPath}/always-fail",
+    "/adapter/channel-list/channel[unique-id=\"kinesis\"]/workflow-list/standard-workflow[unique-id=\"/api/kinesis\"]/consumer/path" : "${apiPath}/kinesis",
+    "/adapter/channel-list/channel[unique-id=\"s3\"]/workflow-list/pooling-workflow[unique-id=\"/api/s3\"]/consumer/path" : "${apiPath}/s3/*",
+    "/adapter/channel-list/channel[unique-id=\"s3\"]/workflow-list/pooling-workflow[unique-id=\"/api/s3\"]/service-collection/services/add-metadata-service[unique-id=\"add-bucket\"]/metadata-element[1]/value" : "${bucket}",
+    "/adapter/channel-list/channel[unique-id=\"s3\"]/workflow-list/pooling-workflow[unique-id=\"/api/s3utils\"]/consumer/path" : "${apiPath}/s3utils/*",
+    "/adapter/channel-list/channel[unique-id=\"sns\"]/workflow-list/standard-workflow[unique-id=\"sns\"]/consumer/path" : "${apiPath}/sns",
+    "/adapter/channel-list/channel[unique-id=\"sns\"]/workflow-list/standard-workflow[unique-id=\"sns\"]/producer/topic-arn" : "${snsTopic}",
+    "/adapter/channel-list/channel[unique-id=\"sqs-to-s3\"]/workflow-list/standard-workflow[unique-id=\"sqs-to-s3\"]/consumer/queue" : "${sqsQueue}",
+    "/adapter/channel-list/channel[unique-id=\"sqs-to-s3\"]/workflow-list/standard-workflow[unique-id=\"sqs-to-s3\"]/service-collection/services/add-metadata-service[unique-id=\"add-bucket\"]/metadata-element[1]/value" : "${bucket}",
+    "/adapter/message-error-handler/processing-exception-service/services/retry-store-write-message[unique-id=\"retry-store-write-service\"]/retry-store/bucket" : "${bucket}",
+    "/adapter/failed-message-retrier/retry-store/bucket" : "${bucket}"
+  },
   "uidInXincludeCompntListFileName" : false,
   "xincludeXpaths" : { },
   "additionalFiles" : {
     "bootstrap.properties" : "bootstrap.properties",
     "log4j2.xml" : "log4j2.xml"
   },
-  "optionalComponentsInUse" : [ "com.adaptris:interlok-aws-common:3.11-SNAPSHOT", "com.adaptris:interlok-aws-kinesis:3.11-SNAPSHOT", "com.adaptris:interlok-aws-s3:3.11-SNAPSHOT", "com.adaptris:interlok-json:3.11-SNAPSHOT" ],
+  "optionalComponentsInUse" : [ "com.adaptris:interlok-aws-common:4.0-SNAPSHOT", "com.adaptris:interlok-aws-kinesis:4.0-SNAPSHOT", "com.adaptris:interlok-aws-s3:4.0-SNAPSHOT", "com.adaptris:interlok-aws-sns:4.0-SNAPSHOT", "com.adaptris:interlok-aws-sqs:4.0-SNAPSHOT", "com.adaptris:interlok-json:4.0-SNAPSHOT" ],
   "structured" : true
 }

@@ -4,20 +4,23 @@
   <heartbeat-event-imp>com.adaptris.core.HeartbeatEvent</heartbeat-event-imp>
   <shared-components>
     <connections>
+      <jetty-embedded-connection>
+        <unique-id>jetty-embedded-connection</unique-id>
+      </jetty-embedded-connection>
       <aws-kinesis-kpl-inline-connection>
         <unique-id>kinesis</unique-id>
         <config>
           <key-value-pair>
             <key>KinesisEndpoint</key>
-            <value>localhost</value>
+            <value>${host}</value>
           </key-value-pair>
           <key-value-pair>
             <key>KinesisPort</key>
-            <value>4566</value>
+            <value>${port}</value>
           </key-value-pair>
           <key-value-pair>
             <key>Region</key>
-            <value>us-west-1</value>
+            <value>${region}</value>
           </key-value-pair>
           <key-value-pair>
             <key>VerifyCertificate</key>
@@ -34,16 +37,34 @@
       </aws-kinesis-kpl-inline-connection>
       <amazon-s3-connection>
         <unique-id>s3</unique-id>
-        <region>eu-west-1</region>
+        <region>${region}</region>
         <credentials class="aws-static-credentials-builder">
           <authentication class="aws-default-authentication"/>
         </credentials>
         <custom-endpoint>
-          <service-endpoint>http://localhost:4566</service-endpoint>
-          <signing-region>eu-west-1</signing-region>
+          <service-endpoint>http://${host}:${port}</service-endpoint>
+          <signing-region>${region}</signing-region>
         </custom-endpoint>
         <force-path-style-access>true</force-path-style-access>
       </amazon-s3-connection>
+      <amazon-sns-connection>
+        <unique-id>sns</unique-id>
+        <region>${region}</region>
+        <custom-endpoint>
+          <service-endpoint>http://${host}:${port}</service-endpoint>
+          <signing-region>${region}</signing-region>
+        </custom-endpoint>
+      </amazon-sns-connection>
+      <amazon-sqs-connection>
+        <unique-id>sqs</unique-id>
+        <region>${region}</region>
+        <client-configuration/>
+        <custom-endpoint>
+          <service-endpoint>http://${host}:${port}</service-endpoint>
+          <signing-region>${region}</signing-region>
+        </custom-endpoint>
+        <sqs-client-factory class="unbuffered-sqs-client-factory"/>
+      </amazon-sqs-connection>
     </connections>
     <services/>
   </shared-components>
@@ -77,7 +98,7 @@
             <connection class="shared-connection">
               <lookup-name>s3</lookup-name>
             </connection>
-            <bucket>bucket</bucket>
+            <bucket>${bucket}</bucket>
             <prefix>errors</prefix>
           </retry-store>
         </retry-store-write-message>
@@ -97,14 +118,14 @@
       <connection class="shared-connection">
         <lookup-name>s3</lookup-name>
       </connection>
-      <bucket>bucket</bucket>
+      <bucket>${bucket}</bucket>
       <prefix>errors</prefix>
     </retry-store>
   </failed-message-retrier>
   <channel-list>
     <channel>
-      <consume-connection class="jetty-embedded-connection">
-        <unique-id>jetty-embedded-connection</unique-id>
+      <consume-connection class="shared-connection">
+        <lookup-name>jetty-embedded-connection</lookup-name>
       </consume-connection>
       <produce-connection class="shared-connection">
         <lookup-name>kinesis</lookup-name>
@@ -113,9 +134,7 @@
         <standard-workflow>
           <consumer class="jetty-message-consumer">
             <unique-id>/api/kinesis</unique-id>
-            <destination class="configured-consume-destination">
-              <destination>/api/kinesis</destination>
-            </destination>
+            <path>${apiPath}/kinesis</path>
             <parameter-handler class="jetty-http-ignore-parameters"/>
             <header-handler class="jetty-http-ignore-headers"/>
           </consumer>
@@ -135,8 +154,8 @@
       <unique-id>kinesis</unique-id>
     </channel>
     <channel>
-      <consume-connection class="jetty-embedded-connection">
-        <unique-id>jetty-embedded-connection</unique-id>
+      <consume-connection class="shared-connection">
+        <lookup-name>jetty-embedded-connection</lookup-name>
       </consume-connection>
       <produce-connection class="null-connection">
         <unique-id>null-connection</unique-id>
@@ -145,9 +164,7 @@
         <pooling-workflow>
           <consumer class="jetty-message-consumer">
             <unique-id>/api/s3</unique-id>
-            <destination class="configured-consume-destination">
-              <destination>/api/s3/*</destination>
-            </destination>
+            <path>${apiPath}/s3/*</path>
             <parameter-handler class="jetty-http-parameters-as-metadata"/>
             <header-handler class="jetty-http-headers-as-metadata"/>
           </consumer>
@@ -158,7 +175,7 @@
                 <unique-id>add-bucket</unique-id>
                 <metadata-element>
                   <key>bucket</key>
-                  <value>bucket</value>
+                  <value>${bucket}</value>
                 </metadata-element>
               </add-metadata-service>
               <switch>
@@ -316,9 +333,7 @@
         <pooling-workflow>
           <consumer class="jetty-message-consumer">
             <unique-id>/api/s3utils</unique-id>
-            <destination class="configured-consume-destination">
-              <destination>/api/s3utils/*</destination>
-            </destination>
+            <path>${apiPath}/s3utils/*</path>
             <parameter-handler class="jetty-http-parameters-as-metadata"/>
             <header-handler class="jetty-http-headers-as-metadata"/>
           </consumer>
@@ -399,7 +414,7 @@
                           <destination-object-name>%message{to}</destination-object-name>
                           <object-metadata>
                             <s3-content-disposition>
-                              <content-disposition>attachment; filename=&quot;%message{from}&quot;</content-disposition>
+                              <content-disposition>attachment; filename="%message{from}"</content-disposition>
                             </s3-content-disposition>
                           </object-metadata>
                         </operation>
@@ -497,8 +512,8 @@
       <unique-id>s3</unique-id>
     </channel>
     <channel>
-      <consume-connection class="jetty-embedded-connection">
-        <unique-id>jetty-connection</unique-id>
+      <consume-connection class="shared-connection">
+        <lookup-name>jetty-embedded-connection</lookup-name>
       </consume-connection>
       <produce-connection class="null-connection">
         <unique-id>null-connection</unique-id>
@@ -507,7 +522,7 @@
         <standard-workflow>
           <consumer class="jetty-message-consumer">
             <unique-id>/api/always-fail</unique-id>
-            <path>/api/always-fail</path>
+            <path>${apiPath}/always-fail</path>
           </consumer>
           <service-collection class="service-list">
             <unique-id>pedantic-montalcini</unique-id>
@@ -527,7 +542,88 @@
           <unique-id>always-fail</unique-id>
         </standard-workflow>
       </workflow-list>
-      <unique-id>utils</unique-id>
+      <unique-id>always-fail</unique-id>
+    </channel>
+    <channel>
+      <consume-connection class="shared-connection">
+        <lookup-name>jetty-embedded-connection</lookup-name>
+      </consume-connection>
+      <produce-connection class="shared-connection">
+        <lookup-name>sns</lookup-name>
+      </produce-connection>
+      <workflow-list>
+        <standard-workflow>
+          <consumer class="jetty-message-consumer">
+            <unique-id>/api/sns</unique-id>
+            <path>${apiPath}/sns</path>
+            <methods>POST</methods>
+            <parameter-handler class="jetty-http-parameters-as-metadata"/>
+            <header-handler class="jetty-http-headers-as-metadata"/>
+          </consumer>
+          <service-collection class="service-list">
+            <unique-id>infallible-bohr</unique-id>
+            <services/>
+          </service-collection>
+          <producer class="amazon-sns-topic-publisher">
+            <unique-id>sns-producer</unique-id>
+            <topic-arn>${snsTopic}</topic-arn>
+          </producer>
+          <produce-exception-handler class="null-produce-exception-handler"/>
+          <unique-id>sns</unique-id>
+        </standard-workflow>
+      </workflow-list>
+      <unique-id>sns</unique-id>
+    </channel>
+    <channel>
+      <consume-connection class="shared-connection">
+        <lookup-name>sqs</lookup-name>
+      </consume-connection>
+      <produce-connection class="null-connection">
+        <unique-id>infallible-visvesvaraya</unique-id>
+      </produce-connection>
+      <workflow-list>
+        <standard-workflow>
+          <consumer class="amazon-sqs-consumer">
+            <unique-id>sqs-consumer</unique-id>
+            <poller class="fixed-interval-poller">
+              <poll-interval>
+                <unit>SECONDS</unit>
+                <interval>10</interval>
+              </poll-interval>
+            </poller>
+            <reacquire-lock-between-messages>true</reacquire-lock-between-messages>
+            <queue>${sqsQueue}</queue>
+          </consumer>
+          <service-collection class="service-list">
+            <unique-id>infallible-bohr</unique-id>
+            <services>
+              <add-metadata-service>
+                <unique-id>add-bucket</unique-id>
+                <metadata-element>
+                  <key>bucket</key>
+                  <value>${bucket}</value>
+                </metadata-element>
+              </add-metadata-service>
+              <amazon-s3-service>
+                <unique-id>upload-aws-s3-file</unique-id>
+                <connection class="shared-connection">
+                  <lookup-name>s3</lookup-name>
+                </connection>
+                <operation class="amazon-s3-upload">
+                  <bucket>%message{bucket}</bucket>
+                  <object-name>%message{%uniqueId}</object-name>
+                </operation>
+              </amazon-s3-service>
+            </services>
+          </service-collection>
+          <producer class="null-message-producer">
+            <unique-id>silly-perlman</unique-id>
+          </producer>
+          <produce-exception-handler class="null-produce-exception-handler"/>
+          <unique-id>sqs-to-s3</unique-id>
+        </standard-workflow>
+      </workflow-list>
+      <unique-id>sqs-to-s3</unique-id>
     </channel>
   </channel-list>
   <message-error-digester class="standard-message-error-digester">

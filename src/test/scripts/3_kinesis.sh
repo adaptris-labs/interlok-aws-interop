@@ -14,7 +14,7 @@ fi
 export PYTHONWARNINGS=ignore
 
 ENDPOINT_URL="${ENDPOINT_URL:-https://localhost:4566}"
-AWS_FLAGS="--region eu-west-1 --endpoint-url=$ENDPOINT_URL --no-verify-ssl"
+AWS_FLAGS="--region eu-west-2 --endpoint-url=$ENDPOINT_URL --no-verify-ssl"
 
 function newStream()
 {

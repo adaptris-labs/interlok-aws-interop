@@ -5,6 +5,7 @@ services:
     environment:
       - SERVICES=kinesis,s3,sqs,sns
       - USE_SSL=1
+      - DEFAULT_REGION=eu-west-2
       - AWS_ACCESS_KEY_ID=abc
       - AWS_SECRET_ACCESS_KEY=def
     ports:

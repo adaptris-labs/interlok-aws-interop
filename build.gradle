@@ -1,6 +1,11 @@
+plugins {
+  // https://github.com/nemerosa/versioning
+  id 'net.nemerosa.versioning' version '2.14.0'
+}
+
 ext {
   interlokParentGradle = project.findProperty('interlokParentGradle') ?: 'https://raw.githubusercontent.com/adaptris-labs/interlok-build-parent/master/build.gradle'
-  interlokVersion  = '3.11-SNAPSHOT'
+  interlokVersion  = '4.0-SNAPSHOT'
   interlokMavenLocal = project.findProperty('interlokMavenLocal') ?: false
 }
 
@@ -12,6 +17,8 @@ repositories {
 
 allprojects {
   apply from: "${interlokParentGradle}"
+  // specify the version of the configuration.
+  version=versioning.info.full
 }
 
 dependencies {
@@ -21,4 +28,8 @@ dependencies {
   interlokJavadocs group: "com.adaptris", name: "interlok-aws-kinesis", version: interlokVersion, changing: true, classifier: "javadoc", transitive: false
   interlokRuntime  group: "com.adaptris", name: "interlok-aws-s3",      version: interlokVersion, changing: true
   interlokJavadocs group: "com.adaptris", name: "interlok-aws-s3",      version: interlokVersion, changing: true, classifier: "javadoc", transitive: false
+  interlokRuntime  group: "com.adaptris", name: "interlok-aws-sns",      version: interlokVersion, changing: true
+  interlokJavadocs group: "com.adaptris", name: "interlok-aws-sns",      version: interlokVersion, changing: true, classifier: "javadoc", transitive: false
+  interlokRuntime  group: "com.adaptris", name: "interlok-aws-sqs",      version: interlokVersion, changing: true
+  interlokJavadocs group: "com.adaptris", name: "interlok-aws-sqs",      version: interlokVersion, changing: true, classifier: "javadoc", transitive: false
 }
