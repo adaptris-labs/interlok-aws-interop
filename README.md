@@ -47,7 +47,7 @@ curl "http://localhost:8080/api/s3/file.txt?useDownload=true"
 curl -X DELETE "http://localhost:8080/api/s3/file.txt"
 # Copy File
 curl "http://localhost:8080/api/s3utils/copy?from=file.txt&to=other.txt"
-# Extended Copy File (adds Content-Disposition)
+# Extended Copy File (adds Content-Disposition) - Works directly with AWS but may not work with localstack
 curl "http://localhost:8080/api/s3utils/copy-extended?from=file.txt&to=other.txt"
 # Tag a file
 curl "http://localhost:8080/api/s3utils/tag?key=file.txt&tags_hello=world"
