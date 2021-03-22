@@ -1,6 +1,6 @@
 # interlok-aws-interop [![Actions Status](https://github.com/adaptris-labs/interlok-aws-interop/workflows/verifyInterlokConfig/badge.svg)](https://github.com/adaptris-labs/interlok-aws-interop/actions)
 
-Interlok configuration that has three workflow:
+Interlok configuration that has five workflow:
 
 * Workflow that exposes HTTP endpoint `/api/kinesis` which will produce to kinesis stream `myStream`
 * Workflow that exposes `/api/s3/..` REST style operations
