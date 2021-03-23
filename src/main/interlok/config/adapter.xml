@@ -65,6 +65,17 @@
         </custom-endpoint>
         <sqs-client-factory class="unbuffered-sqs-client-factory"/>
       </amazon-sqs-connection>
+      <aws-kms-connection>
+        <unique-id>kms</unique-id>
+        <region>${region}</region>
+        <credentials class="aws-static-credentials-builder">
+          <authentication class="aws-default-authentication"/>
+        </credentials>
+        <custom-endpoint>
+          <service-endpoint>http://${host}:${port}</service-endpoint>
+          <signing-region>${region}</signing-region>
+        </custom-endpoint>
+      </aws-kms-connection>
     </connections>
     <services/>
   </shared-components>
@@ -148,7 +159,18 @@
             <partition-key>myPartition</partition-key>
           </producer>
           <produce-exception-handler class="null-produce-exception-handler"/>
-          <unique-id>/api/kinesis</unique-id>
+          <unique-id>api-kinesis</unique-id>
+          <message-metrics-interceptor>
+            <unique-id>api-kinesis-MessageMetrics</unique-id>
+            <timeslice-duration>
+              <unit>MINUTES</unit>
+              <interval>5</interval>
+            </timeslice-duration>
+            <timeslice-history-count>12</timeslice-history-count>
+          </message-metrics-interceptor>
+          <in-flight-workflow-interceptor>
+            <unique-id>api-kinesis-InFlight</unique-id>
+          </in-flight-workflow-interceptor>
         </standard-workflow>
       </workflow-list>
       <unique-id>kinesis</unique-id>
@@ -328,7 +350,21 @@
             </content-type-provider>
           </producer>
           <produce-exception-handler class="null-produce-exception-handler"/>
-          <unique-id>/api/s3</unique-id>
+          <unique-id>api-s3</unique-id>
+          <message-metrics-interceptor>
+            <unique-id>api-s3-MessageMetrics</unique-id>
+            <timeslice-duration>
+              <unit>MINUTES</unit>
+              <interval>5</interval>
+            </timeslice-duration>
+            <timeslice-history-count>12</timeslice-history-count>
+          </message-metrics-interceptor>
+          <in-flight-workflow-interceptor>
+            <unique-id>api-s3-InFlight</unique-id>
+          </in-flight-workflow-interceptor>
+          <jetty-pooling-workflow-interceptor>
+            <unique-id>eager-wilson</unique-id>
+          </jetty-pooling-workflow-interceptor>
         </pooling-workflow>
         <pooling-workflow>
           <consumer class="jetty-message-consumer">
@@ -506,7 +542,21 @@
             </content-type-provider>
           </producer>
           <produce-exception-handler class="null-produce-exception-handler"/>
-          <unique-id>/api/s3utils</unique-id>
+          <unique-id>api-s3utils</unique-id>
+          <message-metrics-interceptor>
+            <unique-id>api-s3utils-MessageMetrics</unique-id>
+            <timeslice-duration>
+              <unit>MINUTES</unit>
+              <interval>5</interval>
+            </timeslice-duration>
+            <timeslice-history-count>12</timeslice-history-count>
+          </message-metrics-interceptor>
+          <in-flight-workflow-interceptor>
+            <unique-id>api-s3utils-InFlight</unique-id>
+          </in-flight-workflow-interceptor>
+          <jetty-pooling-workflow-interceptor>
+            <unique-id>high-bhaskara</unique-id>
+          </jetty-pooling-workflow-interceptor>
         </pooling-workflow>
       </workflow-list>
       <unique-id>s3</unique-id>
@@ -540,6 +590,17 @@
           </producer>
           <produce-exception-handler class="null-produce-exception-handler"/>
           <unique-id>always-fail</unique-id>
+          <message-metrics-interceptor>
+            <unique-id>always-fail-MessageMetrics</unique-id>
+            <timeslice-duration>
+              <unit>MINUTES</unit>
+              <interval>5</interval>
+            </timeslice-duration>
+            <timeslice-history-count>12</timeslice-history-count>
+          </message-metrics-interceptor>
+          <in-flight-workflow-interceptor>
+            <unique-id>always-fail-InFlight</unique-id>
+          </in-flight-workflow-interceptor>
         </standard-workflow>
       </workflow-list>
       <unique-id>always-fail</unique-id>
@@ -570,6 +631,17 @@
           </producer>
           <produce-exception-handler class="null-produce-exception-handler"/>
           <unique-id>sns</unique-id>
+          <message-metrics-interceptor>
+            <unique-id>sns-MessageMetrics</unique-id>
+            <timeslice-duration>
+              <unit>MINUTES</unit>
+              <interval>5</interval>
+            </timeslice-duration>
+            <timeslice-history-count>12</timeslice-history-count>
+          </message-metrics-interceptor>
+          <in-flight-workflow-interceptor>
+            <unique-id>sns-InFlight</unique-id>
+          </in-flight-workflow-interceptor>
         </standard-workflow>
       </workflow-list>
       <unique-id>sns</unique-id>
@@ -621,9 +693,175 @@
           </producer>
           <produce-exception-handler class="null-produce-exception-handler"/>
           <unique-id>sqs-to-s3</unique-id>
+          <message-metrics-interceptor>
+            <unique-id>sqs-to-s3-MessageMetrics</unique-id>
+            <timeslice-duration>
+              <unit>MINUTES</unit>
+              <interval>5</interval>
+            </timeslice-duration>
+            <timeslice-history-count>12</timeslice-history-count>
+          </message-metrics-interceptor>
+          <in-flight-workflow-interceptor>
+            <unique-id>sqs-to-s3-InFlight</unique-id>
+          </in-flight-workflow-interceptor>
         </standard-workflow>
       </workflow-list>
       <unique-id>sqs-to-s3</unique-id>
+    </channel>
+    <channel>
+      <consume-connection class="shared-connection">
+        <lookup-name>jetty-embedded-connection</lookup-name>
+      </consume-connection>
+      <produce-connection class="null-connection">
+        <unique-id>null-connection</unique-id>
+      </produce-connection>
+      <workflow-list>
+        <pooling-workflow>
+          <consumer class="jetty-message-consumer">
+            <unique-id>/api/kms</unique-id>
+            <path>/api/kms/*</path>
+            <parameter-handler class="jetty-http-parameters-as-metadata"/>
+            <header-handler class="jetty-http-headers-as-metadata"/>
+          </consumer>
+          <service-collection class="service-list">
+            <unique-id>service-list</unique-id>
+            <services>
+              <switch>
+                <unique-id>http-routing</unique-id>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>/api/kms/encrypt$</url-pattern>
+                    <method>POST</method>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>kms-encrypt</unique-id>
+                    <services>
+                      <aws-kms-encrypt-data>
+                        <unique-id>encrypt</unique-id>
+                        <connection class="shared-connection">
+                          <lookup-name>kms</lookup-name>
+                        </connection>
+                        <key-id>${kmsEncryptKeyAlias}</key-id>
+                      </aws-kms-encrypt-data>
+                      <base64-encode-service>
+                        <unique-id>base64-encode</unique-id>
+                        <style>BASIC</style>
+                      </base64-encode-service>
+                    </services>
+                  </service>
+                </case>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>/api/kms/decrypt$</url-pattern>
+                    <method>POST</method>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>kms-decrypt</unique-id>
+                    <services>
+                      <base64-decode-service>
+                        <unique-id>base64-decode</unique-id>
+                        <style>BASIC</style>
+                      </base64-decode-service>
+                      <aws-kms-decrypt-data>
+                        <unique-id>decrypt</unique-id>
+                        <connection class="shared-connection">
+                          <lookup-name>kms</lookup-name>
+                        </connection>
+                        <key-id>${kmsEncryptKeyAlias}</key-id>
+                      </aws-kms-decrypt-data>
+                    </services>
+                  </service>
+                </case>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>/api/kms/sign$</url-pattern>
+                    <method>POST</method>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>kms-sign</unique-id>
+                    <services>
+                      <aws-kms-generate-signature>
+                        <unique-id>sign</unique-id>
+                        <connection class="shared-connection">
+                          <lookup-name>kms</lookup-name>
+                        </connection>
+                        <key-id>${kmsSignKeyAlias}</key-id>
+                        <signing-algorithm>RSASSA_PKCS1_V1_5_SHA_256</signing-algorithm>
+                        <input class="byte-array-from-payload"/>
+                        <output class="payload-output-stream-wrapper"/>
+                      </aws-kms-generate-signature>
+                      <base64-encode-service>
+                        <unique-id>base64-encode</unique-id>
+                        <style>BASIC</style>
+                      </base64-encode-service>
+                    </services>
+                  </service>
+                </case>
+                <case>
+                  <condition class="jetty-route-condition">
+                    <url-pattern>/api/kms/verify$</url-pattern>
+                    <method>POST</method>
+                  </condition>
+                  <service class="service-list">
+                    <unique-id>kms-verify</unique-id>
+                    <services>
+                      <json-to-metadata>
+                        <unique-id>json-to-metadata</unique-id>
+                      </json-to-metadata>
+                      <aws-kms-verify-signature>
+                        <unique-id>verify</unique-id>
+                        <connection class="shared-connection">
+                          <lookup-name>kms</lookup-name>
+                        </connection>
+                        <key-id>${kmsSignKeyAlias}</key-id>
+                        <signing-algorithm>RSASSA_PKCS1_V1_5_SHA_256</signing-algorithm>
+                        <signature class="byte-array-from-metadata">
+                          <key>signature</key>
+                          <translator class="base64-byte-translator"/>
+                        </signature>
+                        <data-to-be-verified class="byte-array-from-metadata">
+                          <key>content</key>
+                        </data-to-be-verified>
+                      </aws-kms-verify-signature>
+                      <payload-from-template>
+                        <unique-id>empty-payload</unique-id>
+                        <metadata-tokens/>
+                      </payload-from-template>
+                    </services>
+                  </service>
+                </case>
+              </switch>
+            </services>
+          </service-collection>
+          <producer class="jetty-standard-response-producer">
+            <unique-id>jetty-response-producer</unique-id>
+            <status-provider class="http-configured-status">
+              <status>OK_200</status>
+            </status-provider>
+            <response-header-provider class="jetty-no-response-headers"/>
+            <content-type-provider class="http-configured-content-type-provider">
+              <mime-type>application/json</mime-type>
+            </content-type-provider>
+          </producer>
+          <produce-exception-handler class="null-produce-exception-handler"/>
+          <unique-id>api-kms</unique-id>
+          <message-metrics-interceptor>
+            <unique-id>/api/s3-MessageMetrics</unique-id>
+            <timeslice-duration>
+              <unit>MINUTES</unit>
+              <interval>5</interval>
+            </timeslice-duration>
+            <timeslice-history-count>12</timeslice-history-count>
+          </message-metrics-interceptor>
+          <in-flight-workflow-interceptor>
+            <unique-id>/api/s3-InFlight</unique-id>
+          </in-flight-workflow-interceptor>
+          <jetty-pooling-workflow-interceptor>
+            <unique-id>jovial-saha</unique-id>
+          </jetty-pooling-workflow-interceptor>
+        </pooling-workflow>
+      </workflow-list>
+      <unique-id>kms</unique-id>
     </channel>
   </channel-list>
   <message-error-digester class="standard-message-error-digester">
