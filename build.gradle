@@ -32,4 +32,6 @@ dependencies {
   interlokJavadocs group: "com.adaptris", name: "interlok-aws-sns",      version: interlokVersion, changing: true, classifier: "javadoc", transitive: false
   interlokRuntime  group: "com.adaptris", name: "interlok-aws-sqs",      version: interlokVersion, changing: true
   interlokJavadocs group: "com.adaptris", name: "interlok-aws-sqs",      version: interlokVersion, changing: true, classifier: "javadoc", transitive: false
+  interlokRuntime  group: "com.adaptris", name: "interlok-aws-kms",      version: interlokVersion, changing: true
+  interlokJavadocs group: "com.adaptris", name: "interlok-aws-kms",      version: interlokVersion, changing: true, classifier: "javadoc", transitive: false
 }
