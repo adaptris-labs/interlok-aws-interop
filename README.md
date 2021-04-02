@@ -58,6 +58,21 @@ curl "http://localhost:8080/api/s3utils/tag-get?key=file.txt"
 curl "http://localhost:8080/api/s3utils/check-file-exists?key=nothere.txt"
 ```
 
+### S3 With STS
+
+```shell
+# Upload File
+curl -X POST -H "Content-Type: application/json" -d '{"key": "value"}' "http://localhost:8080/api/s3-sts/file.txt"
+# List Files
+curl "http://localhost:8080/api/s3-sts/"
+# Get File
+curl "http://localhost:8080/api/s3-sts/file.txt"
+# Get File (use download)
+curl "http://localhost:8080/api/s3-sts/file.txt?useDownload=true"
+# Delete File
+curl -X DELETE "http://localhost:8080/api/s3-sts/file.txt"
+```
+
 ### S3 - Retry Message Store
 
 ```shell

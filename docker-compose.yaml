@@ -3,7 +3,7 @@ services:
   localstack:
     image: localstack/localstack
     environment:
-      - SERVICES=kinesis,s3,sqs,sns,kms
+      - SERVICES=kinesis,s3,sqs,sns,kms,sts
       - USE_SSL=1
       - DEFAULT_REGION=eu-west-2
       - AWS_ACCESS_KEY_ID=abc

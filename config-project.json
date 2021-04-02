@@ -33,7 +33,9 @@
     "/adapter/channel-list/channel[unique-id=\"kms\"]/workflow-list/pooling-workflow[unique-id=\"api-kms\"]/service-collection/services/switch[unique-id=\"http-routing\"]/case[3]/service/services/aws-kms-generate-signature[unique-id=\"sign\"]/key-id" : "${kmsSignKeyAlias}",
     "/adapter/channel-list/channel[unique-id=\"kms\"]/workflow-list/pooling-workflow[unique-id=\"api-kms\"]/service-collection/services/switch[unique-id=\"http-routing\"]/case[4]/service/services/aws-kms-verify-signature[unique-id=\"verify\"]/key-id" : "${kmsSignKeyAlias}",
     "/adapter/message-error-handler/processing-exception-service/services/retry-store-write-message[unique-id=\"retry-store-write-service\"]/retry-store/bucket" : "${bucket}",
-    "/adapter/failed-message-retrier/retry-store/bucket" : "${bucket}"
+    "/adapter/failed-message-retrier/retry-store/bucket" : "${bucket}",
+    "/adapter/shared-components/connections/amazon-s3-connection[unique-id=\"s3-with-sts\"]/credentials/role-arn" : "${stsRoleArn}",
+    "/adapter/shared-components/connections/amazon-s3-connection[unique-id=\"s3-with-sts\"]/credentials/role-session-name" : "${stsRoleSessionName}"
   },
   "uidInXincludeCompntListFileName" : false,
   "xincludeXpaths" : { },
