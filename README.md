@@ -1,9 +1,10 @@
 # interlok-aws-interop [![Actions Status](https://github.com/adaptris-labs/interlok-aws-interop/workflows/verifyInterlokConfig/badge.svg)](https://github.com/adaptris-labs/interlok-aws-interop/actions)
 
-Interlok configuration that has six workflows:
+Interlok configuration that has seven workflows:
 
 * Workflow that exposes HTTP endpoint `/api/kinesis` which will produce to kinesis stream `myStream`
 * Workflow that exposes `/api/s3/..` REST style operations
+* Workflow that exposes `/api/s3-sts/..` REST style operations (Doing the same thing as `/api/s3/..` workflow but with STS credentials)
 * Workflow that exposes `/api/s3utils/...` for everything not covered in s3 REST workflow
 * Workflow that exposes `/api/sns/...` which will produce a notification to sns topic `interlok`
 * Workflow that listen on a sqs queue `interlok` and will add the content to a file in s3
