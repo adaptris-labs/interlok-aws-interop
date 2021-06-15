@@ -1,4 +1,4 @@
-name: verifyInterlokConfig
+name: check
 
 on:
   push:
@@ -19,6 +19,7 @@ jobs:
         java-version: 11
     - name: Setup Ubuntu
       run: |
+        sudo apt-get -y update
         sudo apt-get -y -q install haveged
         sudo systemctl enable haveged
         sudo systemctl restart haveged
