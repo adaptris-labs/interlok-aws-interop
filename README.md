@@ -1,4 +1,4 @@
-# interlok-aws-interop [![Actions Status](https://github.com/adaptris-labs/interlok-aws-interop/workflows/verifyInterlokConfig/badge.svg)](https://github.com/adaptris-labs/interlok-aws-interop/actions)
+# interlok-aws-interop [![check](https://github.com/adaptris-labs/interlok-aws-interop/actions/workflows/gradle.yaml/badge.svg)](https://github.com/adaptris-labs/interlok-aws-interop/actions/workflows/gradle.yaml)
 
 Interlok configuration that has seven workflows:
 
